@@ -1,6 +1,7 @@
 [project]
 name = "maneko-api"
 version = "0.0.1"
+requires-python = ">=3.12" # Latest Vercel Version
 dependencies = [
     "blinker==1.9.0",
     "click==8.4.0",
