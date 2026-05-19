@@ -89,7 +89,7 @@ VALUES (%s, %s, %s)
         return internal_error_response(e)
 
 
-@user_blueprint.route("/user", methods=["GET", "PUT"])
+@user_blueprint.route("/user", methods=["GET", "PUT", "DELETE"])
 @authenticated
 def user():
     try:
@@ -160,6 +160,24 @@ SET name=%s, email=%s, password=%s
             cursor.close()
 
             return ok_response({"message": "User updated successfully"})
+
+        if request.method == "DELETE":
+            conn, cursor = get_db()
+
+            cursor.execute(
+                """
+UPDATE "user"
+SET deleted=true
+WHERE id = %s
+            """,
+                [g.user_id],
+            )
+
+            conn.commit()
+            conn.close()
+            cursor.close()
+
+            return ok_response({"message": "User deleted successfully"})
 
         return bad_request_response()
     except Exception as e:
