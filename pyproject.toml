@@ -3,6 +3,7 @@ name = "maneko-api"
 version = "0.0.1"
 requires-python = ">=3.12.13" # Latest Vercel Version
 dependencies = [
+    "bcrypt>=5.0.0",
     "blinker==1.9.0",
     "click==8.4.0",
     "djangorestframework-jwt==1.11.0",
@@ -18,7 +19,7 @@ dependencies = [
 
 
 [tool.ruff]
-line-length = 150
+line-length = 120
 
 [tool.ruff.lint]
 ignore = ["E501"]

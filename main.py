@@ -1,9 +1,11 @@
 from dotenv import load_dotenv
 from flask import Flask
+
+from routes.session import session_blueprint
 from routes.user import user_blueprint
 
-
 app = Flask(__name__)
+app.register_blueprint(session_blueprint)
 app.register_blueprint(user_blueprint)
 
 
