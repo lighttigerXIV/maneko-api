@@ -1,5 +1,5 @@
 # About
-This code was made for [maneko](https://whiskers-apps/maneko).
+This code was made for [maneko](https://github.com/whiskers-apps/maneko).
 
 # Dependencies
 To install the dependencies use `uv sync`.
