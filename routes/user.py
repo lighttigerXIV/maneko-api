@@ -1,5 +1,5 @@
 import bcrypt
-from flask import Blueprint, request
+from flask import Blueprint, g, request
 
 from db import get_db
 from responses import (
@@ -11,17 +11,15 @@ from responses import (
     missing_fields_reponse,
     ok_response,
 )
+from token_utils import authenticated
 from validation_utils import body_has_fields, get_body, is_valid_email, is_valid_string
 
 user_blueprint = Blueprint("user_blueprint", __name__)
 
 
-@user_blueprint.route("/user", methods=["GET", "POST"])
-def user():
+@user_blueprint.route("/user", methods=["POST"])
+def user_registration():
     try:
-        if request.method == "GET":
-            pass
-
         if request.method == "POST":
             body = get_body()
 
@@ -87,5 +85,35 @@ VALUES (%s, %s, %s)
 
         return bad_request_response()
 
+    except Exception as e:
+        return internal_error_response(e)
+
+
+@user_blueprint.route("/user", methods=["GET"])
+@authenticated
+def user():
+    try:
+        conn, cursor = get_db()
+
+        cursor.execute(
+            """
+SELECT name, email
+FROM "user"
+WHERE id = %s
+        """,
+            [g.user_id],
+        )
+
+        row = cursor.fetchone()
+
+        if not row:
+            return database_error_reponse()
+
+        name, email = row["name"], row["email"]
+
+        conn.close()
+        cursor.close()
+
+        return ok_response({"name": name, "email": email})
     except Exception as e:
         return internal_error_response(e)

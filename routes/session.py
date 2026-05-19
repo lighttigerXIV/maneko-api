@@ -51,7 +51,7 @@ def login():
             """
 SELECT id, password
 FROM "user"
-WHERE email = %s
+WHERE email = %s AND NOT deleted
         """,
             [email],
         )
