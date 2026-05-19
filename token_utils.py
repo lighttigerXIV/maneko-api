@@ -17,9 +17,10 @@ def authenticated(f):
 
         cursor.execute(
             """
-SELECT user_id, expiration_date
-FROM token
-WHERE token = %s
+SELECT t.user_id, t.expiration_date
+FROM token t
+LEFT JOIN "user" u ON u.id = t.user_id
+WHERE t.token = %s AND NOT u.deleted
         """,
             [token],
         )

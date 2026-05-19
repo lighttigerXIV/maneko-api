@@ -89,31 +89,78 @@ VALUES (%s, %s, %s)
         return internal_error_response(e)
 
 
-@user_blueprint.route("/user", methods=["GET"])
+@user_blueprint.route("/user", methods=["GET", "PUT"])
 @authenticated
 def user():
     try:
-        conn, cursor = get_db()
+        if request.method == "GET":
+            conn, cursor = get_db()
 
-        cursor.execute(
-            """
+            cursor.execute(
+                """
 SELECT name, email
 FROM "user"
 WHERE id = %s
-        """,
-            [g.user_id],
-        )
+            """,
+                [g.user_id],
+            )
 
-        row = cursor.fetchone()
+            row = cursor.fetchone()
 
-        if not row:
-            return database_error_reponse()
+            if not row:
+                return database_error_reponse()
 
-        name, email = row["name"], row["email"]
+            name, email = row["name"], row["email"]
 
-        conn.close()
-        cursor.close()
+            conn.close()
+            cursor.close()
 
-        return ok_response({"name": name, "email": email})
+            return ok_response({"name": name, "email": email})
+
+        if request.method == "PUT":
+            body = get_body()
+
+            conn, cursor = get_db()
+
+            cursor.execute(
+                """
+SELECT name, email, password
+FROM "user"
+WHERE id = %s
+            """,
+                [g.user_id],
+            )
+
+            row = cursor.fetchone()
+
+            if not row:
+                return database_error_reponse()
+
+            name, email, password = row["name"], row["email"], row["password"]
+
+            name = body["name"] if "name" in body else name
+            email = body["email"] if "email" in body else email
+
+            if "password" in body:
+                password_bytes = body["password"].encode("utf-8")
+                salt = bcrypt.gensalt()
+                hashed_bytes = bcrypt.hashpw(password_bytes, salt)
+                password = hashed_bytes.decode("utf-8")
+
+            cursor.execute(
+                """
+UPDATE "user"
+SET name=%s, email=%s, password=%s
+            """,
+                [name, email, password],
+            )
+
+            conn.commit()
+            conn.close()
+            cursor.close()
+
+            return ok_response({"message": "User updated successfully"})
+
+        return bad_request_response()
     except Exception as e:
         return internal_error_response(e)
