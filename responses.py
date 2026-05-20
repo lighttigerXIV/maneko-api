@@ -5,6 +5,7 @@ class HTTP_CODES:
     OK = 200
     BAD_REQUEST = 400
     UNAUTHORIZED = 401
+    NOT_FOUND = 404
     CONFLICT = 409
     INTERNAL_ERROR = 500
 
@@ -31,6 +32,10 @@ def unauthorized_response(message):
     return jsonify({"error_type": "Unhauthorized", "message": message}), HTTP_CODES.UNAUTHORIZED
 
 
+def not_found_response(message):
+    return jsonify({"error_type": "Not Found", "message": message}), HTTP_CODES.NOT_FOUND
+
+
 def conflict_response(message):
     return jsonify({"error_type": "Conflict", "message": message}), HTTP_CODES.CONFLICT
 
@@ -41,5 +46,5 @@ def internal_error_response(exception):
 
 def database_error_reponse():
     return jsonify(
-        {"error_type": "Internal Error", "message": "Failed to get data from database"}
+        {"error_type": "Internal Error", "message": "An error with database occurred"}
     ), HTTP_CODES.INTERNAL_ERROR

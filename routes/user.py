@@ -17,7 +17,7 @@ from validation_utils import body_has_fields, get_body, is_valid_email, is_valid
 user_blueprint = Blueprint("user_blueprint", __name__)
 
 
-@user_blueprint.route("/user", methods=["POST"])
+@user_blueprint.route("/users", methods=["POST"])
 def user_registration():
     try:
         if request.method == "POST":
@@ -79,9 +79,15 @@ VALUES (%s, %s, %s)
 
             conn.commit()
             conn.close()
+
+            success = cursor.rowcount > 0
+
             cursor.close()
 
-            return ok_response({"message": "Successfully registred"})
+            if success:
+                return ok_response({"message": "Successfully registred"})
+            else:
+                return database_error_reponse()
 
         return bad_request_response()
 
@@ -157,9 +163,14 @@ SET name=%s, email=%s, password=%s
 
             conn.commit()
             conn.close()
+            success = cursor.rowcount > 0
+
             cursor.close()
 
-            return ok_response({"message": "User updated successfully"})
+            if success:
+                return ok_response({"message": "User updated successfully"})
+            else:
+                return database_error_reponse()
 
         if request.method == "DELETE":
             conn, cursor = get_db()
@@ -175,9 +186,13 @@ WHERE id = %s
 
             conn.commit()
             conn.close()
+            success = cursor.rowcount > 0
             cursor.close()
 
-            return ok_response({"message": "User deleted successfully"})
+            if success:
+                return ok_response({"message": "User deleted successfully"})
+            else:
+                return database_error_reponse()
 
         return bad_request_response()
     except Exception as e:
