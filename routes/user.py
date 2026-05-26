@@ -45,12 +45,12 @@ def user_registration():
 
             cursor.execute(
                 """
-SELECT NOT EXISTS (
-	SELECT 1
-	FROM "user"
-	WHERE email = %s
-) as "can_register"
-            """,
+                SELECT NOT EXISTS (
+                    SELECT 1
+                    FROM "user"
+                    WHERE email = %s
+                ) as "can_register"
+                """,
                 [email],
             )
 
@@ -71,9 +71,9 @@ SELECT NOT EXISTS (
 
             cursor.execute(
                 """
-INSERT INTO "user" (email, name, password)
-VALUES (%s, %s, %s)
-            """,
+                INSERT INTO "user" (email, name, password)
+                VALUES (%s, %s, %s)
+                """,
                 [email, name, encrypted_password],
             )
 
@@ -104,10 +104,10 @@ def user():
 
             cursor.execute(
                 """
-SELECT name, email
-FROM "user"
-WHERE id = %s
-            """,
+                SELECT name, email
+                FROM "user"
+                WHERE id = %s
+                """,
                 [g.user_id],
             )
 
@@ -130,10 +130,10 @@ WHERE id = %s
 
             cursor.execute(
                 """
-SELECT name, email, password
-FROM "user"
-WHERE id = %s
-            """,
+                SELECT name, email, password
+                FROM "user"
+                WHERE id = %s
+                """,
                 [g.user_id],
             )
 
@@ -155,9 +155,9 @@ WHERE id = %s
 
             cursor.execute(
                 """
-UPDATE "user"
-SET name=%s, email=%s, password=%s
-            """,
+                UPDATE "user"
+                SET name=%s, email=%s, password=%s
+                """,
                 [name, email, password],
             )
 
@@ -177,10 +177,10 @@ SET name=%s, email=%s, password=%s
 
             cursor.execute(
                 """
-UPDATE "user"
-SET deleted=true
-WHERE id = %s
-            """,
+                UPDATE "user"
+                SET deleted=true
+                WHERE id = %s
+                """,
                 [g.user_id],
             )
 
