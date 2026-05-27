@@ -26,41 +26,11 @@ from validation_utils import (
 accounts_blueprint = Blueprint("accounts_blueprint", __name__)
 
 
-@accounts_blueprint.route("/accounts", methods=["GET", "POST", "PUT"])
-@accounts_blueprint.route("/accounts/<string:id>", methods=["GET", "DELETE"])
+@accounts_blueprint.route("/accounts", methods=["POST", "PUT"])
+@accounts_blueprint.route("/accounts/<string:id>", methods=["DELETE"])
 @authenticated
 def accounts(id=None):
     try:
-        if request.method == "GET":
-            conn, cursor = get_db()
-
-            cursor.execute(
-                """
-                SELECT user_id, name, icon, balance, last_modified
-                FROM account
-                WHERE NOT deleted AND id = %s
-                """,
-                [id],
-            )
-
-            row = cursor.fetchone()
-
-            if not row:
-                return not_found_response("Account not found")
-
-            user_id = g.user_id
-            account_user_id = row["user_id"]
-
-            if user_id != account_user_id:
-                return unauthorized_response("Can't access another user account")
-
-            conn.close()
-            cursor.close()
-
-            del row["user_id"]
-
-            return ok_response(row)
-
         if request.method == "PUT":
             body = get_body()
 

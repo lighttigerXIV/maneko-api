@@ -20,42 +20,11 @@ from validation_utils import body_has_fields, get_body, is_valid_string, is_vali
 subcategories_blueprint = Blueprint("subcategories_blueprint", __name__)
 
 
-@subcategories_blueprint.route("/subcategories", methods=["GET", "PUT", "POST"])
-@subcategories_blueprint.route("/subcategories/<string:id>", methods=["GET", "DELETE"])
+@subcategories_blueprint.route("/subcategories", methods=["PUT", "POST"])
+@subcategories_blueprint.route("/subcategories/<string:id>", methods=["DELETE"])
 @authenticated
 def subcategories(id=None):
     try:
-        if request.method == "GET":
-            conn, cursor = get_db()
-
-            cursor.execute(
-                """
-                SELECT c.user_id, category_id, sc.name, sc.icon, sc.last_modified
-                FROM sub_category sc
-                LEFT JOIN category c ON c.id = category_id
-                WHERE NOT sc.deleted AND sc.id = %s
-                """,
-                [id],
-            )
-
-            row = cursor.fetchone()
-
-            if not row:
-                return not_found_response("Sub Category not found")
-
-            user_id = g.user_id
-            subcategory_user_id = row["user_id"]
-
-            if user_id != subcategory_user_id:
-                return unauthorized_response("Can't access another user subcategory")
-
-            conn.close()
-            cursor.close()
-
-            del row["user_id"]
-
-            return ok_response(row)
-
         if request.method == "PUT":
             body = get_body()
 

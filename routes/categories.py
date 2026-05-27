@@ -26,41 +26,11 @@ from validation_utils import (
 categories_blueprint = Blueprint("categories_blueprint", __name__)
 
 
-@categories_blueprint.route("/categories", methods=["GET", "PUT", "POST"])
-@categories_blueprint.route("/categories/<string:id>", methods=["GET", "DELETE"])
+@categories_blueprint.route("/categories", methods=["PUT", "POST"])
+@categories_blueprint.route("/categories/<string:id>", methods=["DELETE"])
 @authenticated
 def categories(id=None):
     try:
-        if request.method == "GET":
-            conn, cursor = get_db()
-
-            cursor.execute(
-                """
-                SELECT user_id, name, icon, color, last_modified
-                FROM category
-                WHERE NOT deleted AND id = %s
-                """,
-                [id],
-            )
-
-            row = cursor.fetchone()
-
-            if not row:
-                return not_found_response("Category not found")
-
-            user_id = g.user_id
-            category_user_id = row["user_id"]
-
-            if user_id != category_user_id:
-                return unauthorized_response("Can't access another user category")
-
-            conn.close()
-            cursor.close()
-
-            del row["user_id"]
-
-            return ok_response(row)
-
         if request.method == "PUT":
             body = get_body()
 

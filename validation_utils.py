@@ -44,3 +44,7 @@ def is_valid_number(field) -> bool:
 
 def is_valid_email(field) -> bool:
     return bool(re.match(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", field))
+
+
+def get_put_field(body, row, field):
+    return body[field] if field in body else row[field]
