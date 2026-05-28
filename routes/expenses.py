@@ -62,8 +62,6 @@ def expenses():
             info = get_put_field(body, row, "info")
             last_modified = get_put_field(body, row, "last_modified")
 
-            print(account_id, category_id, sub_category_id, info, last_modified)
-
             if not is_valid_UUID(id):
                 return invalid_field_response("id")
 
