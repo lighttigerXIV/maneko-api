@@ -10,6 +10,7 @@ from routes.movements import movements_blueprint
 from routes.reminders import reminders_blueprint
 from routes.session import session_blueprint
 from routes.subcategories import subcategories_blueprint
+from routes.sync import sync_blueprint
 from routes.transfers import transfers_blueprint
 from routes.user import user_blueprint
 
@@ -24,6 +25,7 @@ app.register_blueprint(session_blueprint)
 app.register_blueprint(subcategories_blueprint)
 app.register_blueprint(transfers_blueprint)
 app.register_blueprint(user_blueprint)
+app.register_blueprint(sync_blueprint)
 
 """
 def categories(id):

@@ -12,7 +12,14 @@ from responses import (
     unauthorized_response,
 )
 from token_utils import authenticated
-from validation_utils import body_has_fields, get_body, is_valid_number, is_valid_timestamp, is_valid_UUID
+from validation_utils import (
+    body_has_fields,
+    get_body,
+    get_put_field,
+    is_valid_number,
+    is_valid_timestamp,
+    is_valid_UUID,
+)
 
 movements_blueprint = Blueprint("movements_blueprint", __name__)
 
@@ -23,14 +30,72 @@ movements_blueprint = Blueprint("movements_blueprint", __name__)
 def movements(id=None):
     try:
         if request.method == "PUT":
-            pass
+            body = get_body()
+
+            id = body["id"]
+
+            if not id:
+                return missing_fields_reponse("id")
+
+            conn, cursor = get_db()
+
+            cursor.execute(
+                """
+                SELECT user_id, amount, movement_date, description, expense_id, income_id, transfer_id, last_modified
+                FROM movement
+                WHERE NOT deleted AND id = %s
+                """,
+                [id],
+            )
+
+            row = cursor.fetchone()
+
+            if not row:
+                return not_found_response("Movement not found")
+
+            if row["user_id"] != g.user_id:
+                return unauthorized_response("Can't modify another user movement")
+
+            amount = get_put_field(body, row, "amount")
+            movement_date = get_put_field(body, row, "movement_date")
+            description = get_put_field(body, row, "description")
+            last_modified = get_put_field(body, row, "last_modified")
+
+            if not is_valid_number(amount):
+                return invalid_field_response("amount")
+
+            if not is_valid_timestamp(movement_date):
+                return invalid_field_response("movement_date")
+
+            if not is_valid_timestamp(last_modified):
+                return invalid_field_response("last_modified")
+
+            cursor.execute(
+                """
+                UPDATE movement
+                SET amount = %s, movement_date = %s, description = %s, last_modified = %s
+                WHERE id = %s
+                """,
+                [amount, movement_date, description, last_modified, id],
+            )
+
+            conn.commit()
+
+            success = cursor.rowcount > 0
+
+            conn.close()
+            cursor.close()
+
+            if success:
+                return ok_response({"message": "Movement updated successfully"})
+
+            return database_error_reponse()
 
         if request.method == "POST":
             body = get_body()
 
             fields = [
                 "id",
-                "user_id",
                 "amount",
                 "movement_date",
                 "description",
@@ -44,7 +109,6 @@ def movements(id=None):
                 return missing_fields_reponse(fields)
 
             id = body["id"]
-            user_id = body["user_id"]
             amount = body["amount"]
             movement_date = body["movement_date"]
             description = body["description"]
@@ -58,9 +122,6 @@ def movements(id=None):
 
             if not is_valid_UUID(id):
                 return invalid_field_response("id")
-
-            if not is_valid_UUID(user_id):
-                return invalid_field_response("user_id")
 
             if not is_valid_number(amount):
                 return invalid_field_response("amount")
