@@ -1,7 +1,7 @@
 from flask import Blueprint, g, request
 
 from db import get_db
-from responses import bad_request_response, database_error_reponse, internal_error_response, ok_response
+from responses import bad_request_response, internal_error_response, ok_response
 from token_utils import authenticated
 from validation_utils import get_body
 
@@ -19,76 +19,120 @@ def sync():
 
             cursor.execute(
                 """
-                WITH categories_query AS (
-                    SELECT id, name, color, icon, deleted, last_modified 
-                    FROM category
-                    WHERE user_id = %s
-                ),
-                sub_categories_query AS (
-                    SELECT sc.id, sc.name, sc.category_id, sc.icon, sc.deleted, sc.last_modified
-                    FROM sub_category sc
-                    LEFT JOIN category c ON c.id = sc.category_id
-                    WHERE c.user_id = %s
-                ),
-                accounts_query AS (
-                    SELECT id, name, icon, balance, deleted, last_modified  
-                    FROM account
-                    WHERE user_id = %s
-                ),
-                movements_query AS (
-                    SELECT id, amount, movement_date, description, expense_id, income_id, transfer_id, deleted, last_modified 
-                    FROM movement
-                    WHERE user_id = %s
-                ),
-                expenses_query AS (
-                    SELECT e.id, e.account_id, e.category_id, e.sub_category_id, e.info, e.last_modified 
-                    FROM expense e
-                    LEFT JOIN account a ON a.id = e.account_id
-                    WHERE a.user_id = %s
-                ),
-                incomes_query AS (
-                    SELECT i.id, i.account_id, i.category_id, i.sub_category_id, i.info, i.last_modified 
-                    FROM income i
-                    LEFT JOIN account a ON a.id = i.account_id
-                    WHERE a.user_id = %s
-                ),
-                transfers_query AS (
-                    SELECT t.id, t.from_account_id, t.to_account_id, t.last_modified 
-                    FROM transfer t
-                    LEFT JOIN account a ON a.id = t.from_account_id
-                    WHERE a.user_id = %s
-                ),
-                reminders_query AS (
-                    SELECT id, name, hour, minute, deleted, last_modified
-                    FROM reminder
-                    WHERE user_id = %s
-                )
-
-                SELECT json_build_object(
-                    'categories', coalesce((SELECT json_agg(categories_query) FROM categories_query), json_build_array()),
-                    'sub_categories', coalesce((SELECT json_agg(sub_categories_query) FROM sub_categories_query), json_build_array()),
-                    'accounts', coalesce((SELECT json_agg(accounts_query) FROM accounts_query), json_build_array()),
-                    'movements', coalesce((SELECT json_agg(movements_query) FROM movements_query), json_build_array()),
-                    'expenses', coalesce((SELECT json_agg(expenses_query) FROM expenses_query), json_build_array()),
-                    'incomes', coalesce((SELECT json_agg(incomes_query) FROM incomes_query), json_build_array()),
-                    'transfers', coalesce((SELECT json_agg(transfers_query) FROM transfers_query), json_build_array()),
-                    'reminders', coalesce((SELECT json_agg(reminders_query) FROM reminders_query), json_build_array())
-                ) AS response
+                SELECT id, name, color, icon, deleted, last_modified 
+                FROM category
+                WHERE user_id = %s
                 """,
-                [user_id, user_id, user_id, user_id, user_id, user_id, user_id, user_id],
+                [user_id],
             )
 
-            row = cursor.fetchone()
+            row = cursor.fetchall()
+            categories = row if row is not None else []
+            categories = []
 
-            if not row:
-                return database_error_reponse()
+            cursor.execute(
+                """
+                SELECT sc.id, sc.name, sc.category_id, sc.icon, sc.deleted, sc.last_modified
+                FROM sub_category sc
+                LEFT JOIN category c ON c.id = sc.category_id
+                WHERE c.user_id = %s
+                """,
+                [user_id],
+            )
+
+            row = cursor.fetchall()
+            sub_categories = row if row is not None else []
+
+            cursor.execute(
+                """
+                SELECT id, name, icon, balance::float8, deleted, last_modified
+                FROM account
+                WHERE user_id = %s
+                """,
+                [user_id],
+            )
+
+            row = cursor.fetchall()
+            accounts = row if row is not None else []
+
+            cursor.execute(
+                """
+                SELECT id, amount::float8, movement_date, description, expense_id, income_id, transfer_id, deleted, last_modified
+                FROM movement
+                WHERE user_id = %s
+                """,
+                [user_id],
+            )
+
+            row = cursor.fetchall()
+            movements = row if row is not None else []
+
+            cursor.execute(
+                """
+                SELECT e.id, e.account_id, e.category_id, e.sub_category_id, e.info, e.last_modified
+                FROM expense e
+                LEFT JOIN account a ON a.id = e.account_id
+                WHERE a.user_id = %s
+                """,
+                [user_id],
+            )
+
+            row = cursor.fetchall()
+            expenses = row if row is not None else []
+
+            cursor.execute(
+                """
+                SELECT i.id, i.account_id, i.category_id, i.sub_category_id, i.info, i.last_modified
+                FROM income i
+                LEFT JOIN account a ON a.id = i.account_id
+                WHERE a.user_id = %s
+                """,
+                [user_id],
+            )
+
+            row = cursor.fetchall()
+            incomes = row if row is not None else []
+
+            cursor.execute(
+                """
+                SELECT t.id, t.from_account_id, t.to_account_id, t.last_modified
+                FROM transfer t
+                LEFT JOIN account a ON a.id = t.from_account_id
+                WHERE a.user_id = %s
+                """,
+                [user_id],
+            )
+
+            row = cursor.fetchall()
+            transfers = row if row is not None else []
+
+            cursor.execute(
+                """
+                SELECT id, name, hour, minute, deleted, last_modified
+                FROM reminder
+                WHERE user_id = %s
+                """,
+                [user_id],
+            )
+
+            row = cursor.fetchall()
+            reminders = row if row is not None else []
 
             conn.close()
             cursor.close()
 
-            response = row["response"]
-
-            return ok_response(response)
+            return ok_response(
+                {
+                    "categories": categories,
+                    "sub_categories": sub_categories,
+                    "accounts": accounts,
+                    "movements": movements,
+                    "expenses": expenses,
+                    "incomes": incomes,
+                    "transfers": transfers,
+                    "reminders": reminders,
+                }
+            )
 
         if request.method == "PUT":
             body = get_body()
@@ -239,7 +283,7 @@ def sync():
                     ],
                 )
 
-            for movement in body["movements"]:
+            for movements in body["movements"]:
                 cursor.execute(
                     """
                     INSERT INTO movement (id, user_id, amount, movement_date, description, expense_id, income_id, transfer_id, deleted, last_modified)
@@ -257,16 +301,16 @@ def sync():
                     WHERE EXCLUDED.last_modified > movement.last_modified
                     """,
                     [
-                        movement["id"],
+                        movements["id"],
                         user_id,
-                        movement["amount"],
-                        movement["movement_date"],
-                        movement["description"],
-                        movement.get("expense_id"),
-                        movement.get("income_id"),
-                        movement.get("transfer_id"),
-                        movement["deleted"],
-                        movement["last_modified"],
+                        movements["amount"],
+                        movements["movement_date"],
+                        movements["description"],
+                        movements.get("expense_id"),
+                        movements.get("income_id"),
+                        movements.get("transfer_id"),
+                        movements["deleted"],
+                        movements["last_modified"],
                     ],
                 )
 
