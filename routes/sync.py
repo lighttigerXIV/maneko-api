@@ -28,7 +28,6 @@ def sync():
 
             row = cursor.fetchall()
             categories = row if row is not None else []
-            categories = []
 
             cursor.execute(
                 """
