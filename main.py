@@ -27,25 +27,6 @@ app.register_blueprint(transfers_blueprint)
 app.register_blueprint(user_blueprint)
 app.register_blueprint(sync_blueprint)
 
-"""
-def categories(id):
-    try:
-        if request.method == "GET":
-            pass
-        if request.method == "PUT":
-            body = get_body()
-
-        if request.method == "POST":
-            body = get_body()
-
-        if request.method == "DELETE":
-            pass
-
-        return bad_request_response()
-    except Exception as e:
-        return internal_error_response(e)
-"""
-
 
 @app.route("/", methods=["GET"])
 def root():
